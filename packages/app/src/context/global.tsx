@@ -1,4 +1,5 @@
 import { createSimpleContext } from "@opencode-ai/ui/context"
+import { useQueryClient } from "@tanstack/solid-query"
 import { createEffect, createMemo, createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createServerProjects, RECENTLY_CLOSED_DISPLAY_LIMIT, ServerConnection, useServer } from "./server"
@@ -7,7 +8,6 @@ import { useServerHealth } from "@/utils/server-health"
 import { createServerSdkContext } from "./server-sdk"
 import { createServerSyncContext } from "./server-sync"
 import { getOwner } from "solid-js/web"
-import { QueryClient } from "@tanstack/solid-query"
 import type { ServerScope } from "@/utils/server-scope"
 
 export const { use: useGlobal, provider: GlobalProvider } = createSimpleContext({
@@ -98,17 +98,9 @@ function createServerCtx(
   scope: ServerScope,
   projects: ReturnType<typeof createServerProjects>,
 ) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnReconnect: false,
-        refetchOnMount: false,
-        refetchOnWindowFocus: false,
-      },
-    },
-  })
   const sdk = createServerSdkContext(conn, scope)
   const sync = createServerSyncContext(sdk)
+  const queryClient = useQueryClient()
 
   function enrich(project: { worktree: string; expanded: boolean }) {
     const [childStore] = sync.child(project.worktree, { bootstrap: false })
@@ -141,10 +133,10 @@ function createServerCtx(
     (conn?.type === "sidecar" && conn.variant === "base") || (conn?.type === "http" && isLocalHost(conn.http.url))
 
   return {
-    queryClient,
     sdk,
     sync,
     isLocal,
+    queryClient,
     projects: {
       ...projects,
       list: projectsList,
