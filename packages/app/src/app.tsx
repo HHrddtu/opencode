@@ -85,8 +85,8 @@ function TargetServerRoute(props: ParentProps) {
 
   return (
     <Show when={requireServerKey(params.serverKey)} keyed>
-      <ServerSDKProvider server={conn}>
-        <ServerSyncProvider server={conn}>{props.children}</ServerSyncProvider>
+      <ServerSDKProvider server={conn()}>
+        <ServerSyncProvider server={conn()}>{props.children}</ServerSyncProvider>
       </ServerSDKProvider>
     </Show>
   )
@@ -133,16 +133,14 @@ function DraftRoute() {
 function ResolvedDraftRoute(props: { draft: DraftTab }) {
   const global = useGlobal()
   const conn = createMemo(() => global.servers.list().find((item) => ServerConnection.key(item) === props.draft.server))
-  const directory = () => props.draft.directory
-  const serverKey = () => props.draft.server
 
   return (
     <Show when={`${props.draft.server}\0${props.draft.directory}`} keyed>
-      <ServerSDKProvider server={conn}>
-        <ServerSyncProvider server={conn}>
-          <ModelsProvider directory={directory}>
-            <SDKProvider directory={directory}>
-              <DirectoryDataProvider directory={directory} server={serverKey}>
+      <ServerSDKProvider server={conn()}>
+        <ServerSyncProvider server={conn()}>
+          <ModelsProvider directory={props.draft.directory}>
+            <SDKProvider directory={props.draft.directory}>
+              <DirectoryDataProvider directory={props.draft.directory} server={props.draft.server}>
                 <DraftProviders>
                   <NewSession />
                 </DraftProviders>
@@ -246,7 +244,7 @@ function DesktopCommands() {
 }
 
 type ServerScopedShellProps = ParentProps<{
-  directory?: () => string | undefined
+  directory?: string
   serverScoped?: JSX.Element
 }>
 
